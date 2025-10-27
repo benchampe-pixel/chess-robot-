@@ -94,16 +94,18 @@ def click_event(event, x, y, flags, param):
             print("Corners selected:")
             print(board_corners)
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
+if not cap.isOpened():
+    raise RuntimeError("Webcam not detected.")
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
     
-    undistored = cv2.undistort(frame, mtx, dist, None, mtx)
+    #undistored = cv2.undistort(frame, mtx, dist, None, mtx)
 
-    temp = undistored.copy()
+    temp = frame.copy()
     for i, (x, y) in enumerate(board_corners):
         cv2.circle(temp, (x, y), 5, (0, 0, 255), -1)
         cv2.putText(temp, str(i+1), (x+5, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
@@ -118,25 +120,14 @@ while True:
     elif key == ord('q'):  # quit
         break
 
+cv2.destroyAllWindows()
+
 square_centers = get_square_centers(board_corners)
 
-img = np.zeros((600, 600, 3), dtype=np.uint8)
-cv2.polylines(img, [np.array(board_corners, dtype=np.int32)], isClosed=True, color=(0,255,0), thickness=2)
-
-for i, row in enumerate(square_centers):
-    for j, (x, y) in enumerate(row):
-        x, y = int(x), int(y)
-        cv2.circle(img, (x, y), 4, (0, 0, 255), -1)
-        cv2.putText(img, f"{i},{j}", (x + 5, y - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-
-cv2.imshow("Square Centers", img)
-cv2.waitKey(0)
-
 # --- CAMERA SETUP ---
-cap = cv2.VideoCapture(1)
-if not cap.isOpened():
-    raise RuntimeError("Webcam not detected.")
+# cap = cv2.VideoCapture(1)
+# if not cap.isOpened():
+#     raise RuntimeError("Webcam not detected.")
 
 # --- CONFIG ---
 SERIAL_PORT = 'COM5'      # ESP32 port
@@ -146,7 +137,7 @@ DEADZONE = 0.1            # joystick deadzone
 
 horizontal_value = 90
 shoulder_value = 90
-elbow_value = 90
+elbow_value = 90 + 15
 
 # --- SETUP SERIAL ---
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
