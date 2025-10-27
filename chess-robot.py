@@ -28,9 +28,9 @@ def install_missing_requirements(requirements_file="requirements.txt"):
 
 # --- END PIP DOWNLOAD ---
 
-data = np.load("calibration_data.npz")
-mtx = data["camera_matrix"]
-dist = data["dist_coeffs"]
+data = np.load("camera_calibration.npz")
+mtx = data["cameraMatrix"]
+dist = data["distCoeffs"]
 
 # --- ARUCO SETUP ---
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_5X5_100)
@@ -152,10 +152,7 @@ try:
                 label = pieces[marker_id] if marker_id < len(pieces) else f"ID {marker_id}"
                 cv2.putText(frame, label, tuple(pts[0].astype(int) - [0, 10]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-        h, w = frame.shape[:2]
-        new_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
-
-        undistored = cv2.undistort(frame, mtx, dist, None, new_mtx)
+        undistored = cv2.undistort(frame, mtx, dist, None, mtx)
         cv2.imshow("ArUco Chess Detector", undistored)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
