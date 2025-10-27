@@ -1,6 +1,46 @@
 import pygame
 import serial
 import time
+import cv2
+import cv2.aruco as aruco
+
+# --- DOWNLOAD PIP PACKAGES ---
+import subprocess
+import sys
+
+def install_missing_requirements(requirements_file="requirements.txt"):
+    """Check each package in requirements.txt and install if missing."""
+    with open(requirements_file, "r") as f:
+        packages = [
+            line.strip() for line in f 
+            if line.strip() and not line.startswith("#")
+        ]
+
+    for pkg in packages:
+        try:
+            __import__(pkg.split("==")[0].split(">=")[0].split("<=")[0])
+            print(f"{pkg} already installed.")
+        except ImportError:
+            print(f"Installing {pkg}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
+
+# --- END PIP DOWNLOAD ---
+
+# --- ARUCO SETUP ---
+aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_5X5_100)
+parameters = aruco.DetectorParameters()
+detector = aruco.ArucoDetector(aruco_dict, parameters)
+
+# Polyglot piece names by index
+pieces = [
+    "WP", "WN", "WB", "WR", "WQ", "WK",
+    "BP", "BN", "BB", "BR", "BQ", "BK"
+]
+
+# --- CAMERA SETUP ---
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    raise RuntimeError("Webcam not detected.")
 
 # --- CONFIG ---
 SERIAL_PORT = 'COM5'      # ESP32 port
@@ -77,11 +117,34 @@ def get_inputs(joystick):
 try:
     jsc = JoystickController(get_inputs(joystick))
 
+    print("Press 'q' to quit")
+
     while True:
         pygame.event.pump()
 
         jsc.update(get_inputs(joystick))
         jsc.send()
+
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        corners, ids, _ = detector.detectMarkers(gray)
+
+        if ids is not None:
+            for corner, marker_id in zip(corners, ids.flatten()):
+                pts = corner.reshape((4, 2))
+                for j in range(4):
+                    cv2.line(frame, tuple(pts[j].astype(int)), tuple(pts[(j + 1) % 4].astype(int)), (0, 255, 0), 2)
+
+                # Label each tag with its ID or chess piece name
+                label = pieces[marker_id] if marker_id < len(pieces) else f"ID {marker_id}"
+                cv2.putText(frame, label, tuple(pts[0].astype(int) - [0, 10]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+        cv2.imshow("ArUco Chess Detector", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
         time.sleep(0.02)  # ~50 Hz loop
 
@@ -90,3 +153,5 @@ except KeyboardInterrupt:
 finally:
     ser.close()
     pygame.quit()
+    cap.release()
+    cv2.destroyAllWindows()
