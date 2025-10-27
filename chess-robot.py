@@ -102,7 +102,7 @@ class JoystickController:
         shoulder_value += self.shoulder
         elbow_value += self.elbow
         
-        ser.write(f"{self.horServo:.2f},{self.shoulder:.2f},{self.elbow:.2f}\n".encode('utf-8'))
+        ser.write(f"{horizontal_value:.2f},{shoulder_value:.2f},{elbow_value:.2f}\n".encode('utf-8'))
 
 LEFT_TRIGGER = 4
 RIGHT_TRIGGER = 5
