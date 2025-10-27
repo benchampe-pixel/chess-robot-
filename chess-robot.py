@@ -83,16 +83,16 @@ def get_square_centers(corners):
 board_corners = []
 
 def click_event(event, x, y, flags, param):
-    global corners
+    global board_corners
     if event == cv2.EVENT_LBUTTONDOWN:
-        if len(corners) < 4:
-            corners.append((x, y))
-            print(f"Corner {len(corners)}: {x}, {y}")
+        if len(board_corners) < 4:
+            board_corners.append((x, y))
+            print(f"Corner {len(board_corners)}: {x}, {y}")
             cv2.circle(frame, (x, y), 5, (0, 0, 255), -1)
             cv2.imshow("Select Corners", frame)
-        if len(corners) == 4:
+        if len(board_corners) == 4:
             print("Corners selected:")
-            print(corners)
+            print(board_corners)
 
 cap = cv2.VideoCapture(0)
 
@@ -100,9 +100,11 @@ while True:
     ret, frame = cap.read()
     if not ret:
         break
+    
+    undistored = cv2.undistort(frame, mtx, dist, None, mtx)
 
-    temp = frame.copy()
-    for i, (x, y) in enumerate(corners):
+    temp = undistored.copy()
+    for i, (x, y) in enumerate(board_corners):
         cv2.circle(temp, (x, y), 5, (0, 0, 255), -1)
         cv2.putText(temp, str(i+1), (x+5, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
@@ -111,12 +113,25 @@ while True:
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('r'):   # reset
-        corners = []
+        board_corners = []
         print("Corners reset.")
     elif key == ord('q'):  # quit
         break
 
 square_centers = get_square_centers(board_corners)
+
+img = np.zeros((600, 600, 3), dtype=np.uint8)
+cv2.polylines(img, [np.array(board_corners, dtype=np.int32)], isClosed=True, color=(0,255,0), thickness=2)
+
+for i, row in enumerate(square_centers):
+    for j, (x, y) in enumerate(row):
+        x, y = int(x), int(y)
+        cv2.circle(img, (x, y), 4, (0, 0, 255), -1)
+        cv2.putText(img, f"{i},{j}", (x + 5, y - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+cv2.imshow("Square Centers", img)
+cv2.waitKey(0)
 
 # --- CAMERA SETUP ---
 cap = cv2.VideoCapture(1)
@@ -214,7 +229,9 @@ try:
         if not ret:
             break
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        undistored = cv2.undistort(frame, mtx, dist, None, mtx)
+
+        gray = cv2.cvtColor(undistored, cv2.COLOR_BGR2GRAY)
         corners, ids, _ = detector.detectMarkers(gray)
 
         board = [["" for _ in range(8)] for _ in range(8)]
@@ -233,18 +250,17 @@ try:
                             pos = (i, j)
 
                 for j in range(4):
-                    cv2.line(frame, tuple(pts[j].astype(int)), tuple(pts[(j + 1) % 4].astype(int)), (0, 255, 0), 2)
+                    cv2.line(undistored, tuple(pts[j].astype(int)), tuple(pts[(j + 1) % 4].astype(int)), (0, 255, 0), 2)
 
                 # Label each tag with its ID or chess piece name
                 label = pieces[marker_id] if marker_id < len(pieces) else f"ID {marker_id}"
                 fen_piece = piece_to_fen(label)
                 board[pos[0]][pos[1]] = fen_piece
                 
-                cv2.putText(frame, label, tuple(pts[0].astype(int) - [0, 10]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                cv2.putText(undistored, label, tuple(pts[0].astype(int) - [0, 10]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         fen = board_to_fen(board)
         print(f"FEN: {fen}")
         
-        undistored = cv2.undistort(frame, mtx, dist, None, mtx)
         cv2.imshow("ArUco Chess Detector", undistored)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
