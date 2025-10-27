@@ -3,6 +3,7 @@ import serial
 import time
 import cv2
 import cv2.aruco as aruco
+
 # --- DOWNLOAD PIP PACKAGES ---
 import subprocess
 import sys
@@ -32,12 +33,12 @@ detector = aruco.ArucoDetector(aruco_dict, parameters)
 
 # Polyglot piece names by index
 pieces = [
-    "WP", "WN", "WB", "WR", "WQ", "WK",
-    "BP", "BN", "BB", "BR", "BQ", "BK"
+    "BN", "WN", "BB", "WB", "BQ", "WQ",
+    "BK", "WK", "BR", "WR", "BQ", "WP"
 ]
 
 # --- CAMERA SETUP ---
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise RuntimeError("Webcam not detected.")
 
@@ -47,8 +48,8 @@ BAUD_RATE = 115200
 MAX_SPEED = 3.0           # degrees per update
 DEADZONE = 0.1            # joystick deadzone
 
-horizontal_value = 90
-shoulder_value = 90
+horizontal_value = 0
+shoulder_value = 0
 elbow_value = 0
 
 # --- SETUP SERIAL ---
@@ -84,19 +85,15 @@ class JoystickController:
 
         self.horServo = (lt - rt) * MAX_SPEED
 
-        if abs(jsi.left_y) < DEADZONE:
-            jsi.left_y = 0
-        self.shoulder = jsi.left_y * MAX_SPEED
+        if abs(jsi.y_left) < DEADZONE:
+            y_left = 0
+        self.shoulder = y_left * MAX_SPEED
 
-        if abs(jsi.right_y) < DEADZONE:
-            jsi.right_y = 0
-        self.elbow = jsi.right_y * MAX_SPEED
+        if abs(jsi.y_right) < DEADZONE:
+            y_right = 0
+        self.elbow = y_right * MAX_SPEED
 
     def send(self):
-        global horizontal_value
-        global shoulder_value
-        global elbow_value
-
         horizontal_value += self.horServo
         shoulder_value += self.shoulder
         elbow_value += self.elbow
