@@ -151,7 +151,11 @@ try:
                 # Label each tag with its ID or chess piece name
                 label = pieces[marker_id] if marker_id < len(pieces) else f"ID {marker_id}"
                 cv2.putText(frame, label, tuple(pts[0].astype(int) - [0, 10]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        undistored = cv2.undistort(frame, mtx, dist, None, mtx)
+
+        h, w = frame.shape[:2]
+        new_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+
+        undistored = cv2.undistort(frame, mtx, dist, None, new_mtx)
         cv2.imshow("ArUco Chess Detector", undistored)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
