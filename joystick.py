@@ -29,10 +29,14 @@ class JoystickController:
         
         return self.horServo, self.shoulder, self.elbow
 
-LEFT_TRIGGER = 4
-RIGHT_TRIGGER = 5
+# LEFT_TRIGGER = 4
+# RIGHT_TRIGGER = 5
+# LEFT_Y = 1
+# RIGHT_Y = 3
+LEFT_TRIGGER = 3
+RIGHT_TRIGGER = 2
 LEFT_Y = 1
-RIGHT_Y = 3
+RIGHT_Y = 0
 
 def trigger_value(raw):
     """Map trigger axis from [-1, 1] to [0, 1]"""

@@ -25,34 +25,34 @@ def main():
         raise RuntimeError("Webcam not detected.")
 
     # --- BOARD CORNER SELECTION ---
-    board_corners = []
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # board_corners = []
+    # while True:
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         break
         
-        undistored = cv2.undistort(frame, mtx, dist, None, mtx)
+    #     undistored = cv2.undistort(frame, mtx, dist, None, mtx)
 
-        temp = undistored.copy()
-        for i, (x, y) in enumerate(board_corners):
-            cv2.circle(temp, (x, y), 5, (0, 0, 255), -1)
-            cv2.putText(temp, str(i+1), (x+5, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+    #     temp = undistored.copy()
+    #     for i, (x, y) in enumerate(board_corners):
+    #         cv2.circle(temp, (x, y), 5, (0, 0, 255), -1)
+    #         cv2.putText(temp, str(i+1), (x+5, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
-        cv2.imshow("Select Corners", temp)
-        cv2.setMouseCallback("Select Corners", lambda event, x, y, flags, param: click_event(event, x, y, flags, param, board_corners, undistored))
+    #     cv2.imshow("Select Corners", temp)
+    #     cv2.setMouseCallback("Select Corners", lambda event, x, y, flags, param: click_event(event, x, y, flags, param, board_corners, undistored))
 
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('r'):   # reset
-            board_corners = []
-            print("Corners reset.")
-        elif key == ord('q'):  # quit
-            break
+    #     key = cv2.waitKey(1) & 0xFF
+    #     if key == ord('r'):   # reset
+    #         board_corners = []
+    #         print("Corners reset.")
+    #     elif key == ord('q'):  # quit
+    #         break
 
-    if len(board_corners) != 4:
-        print("Board corner selection was not completed. Exiting.")
-        return
+    # if len(board_corners) != 4:
+    #     print("Board corner selection was not completed. Exiting.")
+    #     return
 
-    square_centers = get_square_centers(board_corners)
+    square_centers = get_square_centers([(289, 96), (834, 104), (825, 640), (263, 609)])
 
     cv2.destroyAllWindows()
 
@@ -77,7 +77,8 @@ def main():
             if jsc:
                 # hor_servo, shoulder, elbow = jsc.update(get_inputs(joystick))
                 # send_command(hor_servo, shoulder, elbow)
-                go_to_point(100, 100, 100)
+                #           x   y    Vert
+                go_to_point(50, 50, -100)
 
             ret, frame = cap.read()
             if not ret:

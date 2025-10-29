@@ -9,7 +9,7 @@ horizontal_value = 90
 shoulder_value = 90
 elbow_value = 90
 
-shoulder_length = 226.149; # in mm
+shoulder_length = 177.8; # in mm
 elbow_length = 151.13 # in mm
 
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
