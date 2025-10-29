@@ -7,7 +7,7 @@ from config import SERIAL_PORT, BAUD_RATE
 from chess import board_to_fen, piece_to_fen, pieces
 from cam import get_square_centers, click_event, find_and_draw_markers
 from joystick import JoystickController, get_inputs
-from robot import send_command, close_serial
+from robot import send_command, close_serial, go_to_point
 
 def main():
     # --- CAMERA CALIBRATION ---
@@ -54,6 +54,8 @@ def main():
 
     square_centers = get_square_centers(board_corners)
 
+    cv2.destroyAllWindows()
+
     # --- JOYSTICK SETUP ---
     pygame.init()
     pygame.joystick.init()
@@ -73,8 +75,9 @@ def main():
             pygame.event.pump()
 
             if jsc:
-                hor_servo, shoulder, elbow = jsc.update(get_inputs(joystick))
-                send_command(hor_servo, shoulder, elbow)
+                # hor_servo, shoulder, elbow = jsc.update(get_inputs(joystick))
+                # send_command(hor_servo, shoulder, elbow)
+                go_to_point(100, 100, 100)
 
             ret, frame = cap.read()
             if not ret:
