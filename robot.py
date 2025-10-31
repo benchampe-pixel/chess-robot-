@@ -32,7 +32,7 @@ def go_to_point(x, y, z):
     L2 = elbow_length
 
     # Horizontal base rotation (around Z axis)
-    horizontal_angle = math.degrees(math.atan2(y, x))
+    horizontal_angle = 0#math.degrees(math.atan2(y, x))
 
     # Projected distance from base to target in horizontal plane
     r = math.sqrt(x**2 + y**2)
@@ -45,7 +45,7 @@ def go_to_point(x, y, z):
 
     # Elbow angle using cosine law
     cos_elbow = (L1**2 + L2**2 - d**2) / (2 * L1 * L2)
-    elbow_angle = math.degrees(math.acos(cos_elbow))
+    elbow_angle = math.degrees(-math.acos(cos_elbow))
 
     # Shoulder angle relative to horizontal
     cos_shoulder = (d**2 + L1**2 - L2**2) / (2 * d * L1)
@@ -55,8 +55,9 @@ def go_to_point(x, y, z):
 
     # Map to servo coordinates (assuming 90° = straight)
     horizontal_servo = horizontal_angle
-    shoulder_servo = 90 - shoulder_angle
-    elbow_servo = 180 - elbow_angle  # bend decreases value
+    shoulder_servo = shoulder_angle
+    elbow_servo = -elbow_angle  # bend decreases value
+    print("servo:", elbow_servo)
 
     # Send command
     ser.write(f"{horizontal_servo:.2f},{shoulder_servo:.2f},{elbow_servo:.2f}\n".encode('utf-8'))
