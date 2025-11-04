@@ -8,7 +8,7 @@ aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_5X5_100)
 parameters = aruco.DetectorParameters()
 detector = aruco.ArucoDetector(aruco_dict, parameters)
 
-def get_square_centers(corners):
+def get_square_centers(corners, calibration_locations):
     # corners: list of 4 board corners (tl, tr, br, bl)
     tl, tr, br, bl = [np.array(p, dtype=float) for p in corners]
     centers = []
@@ -19,7 +19,21 @@ def get_square_centers(corners):
             y = (tl[1]*(7-j)/7 + tr[1]*j/7)*(7-i)/7 + (bl[1]*(7-j)/7 + br[1]*j/7)*i/7
             row.append((x, y))
         centers.append(row)
-    return centers
+
+    # physical square locations
+    physical_corners = np.array(calibration_locations, dtype=float)
+    physical_tl, physical_tr, physical_br, physical_bl = physical_corners
+    physical_centers = []
+    for i in range(8):
+        row = []
+        for j in range(8):
+            x = (physical_tl[0]*(7-j)/7 + physical_tr[0]*j/7)*(7-i)/7 + (physical_bl[0]*(7-j)/7 + physical_br[0]*j/7)*i/7
+            y = (physical_tl[1]*(7-j)/7 + physical_tr[1]*j/7)*(7-i)/7 + (physical_bl[1]*(7-j)/7 + physical_br[1]*j/7)*i/7
+            z = (physical_tl[2]*(7-j)/7 + physical_tr[2]*j/7)*(7-i)/7 + (physical_bl[2]*(7-j)/7 + physical_br[2]*j/7)*i/7
+            row.append((x, y, z))
+        physical_centers.append(row)
+
+    return centers, physical_centers
 
 def click_event(event, x, y, flags, param, board_corners, frame):
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -59,6 +73,6 @@ def find_and_draw_markers(frame, mtx, dist, square_centers):
             cv2.putText(undistored, label, tuple(pts[0].astype(int) - [0, 10]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     
     fen = board_to_fen(board)
-    print(f"FEN: {fen}")
+    #print(f"FEN: {fen}")
     
     cv2.imshow("ArUco Chess Detector", undistored)
