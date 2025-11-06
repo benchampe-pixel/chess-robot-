@@ -104,51 +104,47 @@ def main():
 
     # --- BOARD CORNER SELECTION ---
     board_corners = [(289, 96), (834, 104), (825, 640), (263, 609)]
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # while True:
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         break
         
-        undistored = cv2.undistort(frame, mtx, dist, None, mtx)
+    #     undistored = cv2.undistort(frame, mtx, dist, None, mtx)
 
-        temp = undistored.copy()
-        for i, (x, y) in enumerate(board_corners):
-            cv2.circle(temp, (x, y), 5, (0, 0, 255), -1)
-            cv2.putText(temp, str(i+1), (x+5, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+    #     temp = undistored.copy()
+    #     for i, (x, y) in enumerate(board_corners):
+    #         cv2.circle(temp, (x, y), 5, (0, 0, 255), -1)
+    #         cv2.putText(temp, str(i+1), (x+5, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
-        cv2.imshow("Select Corners", temp)
-        cv2.setMouseCallback("Select Corners", lambda event, x, y, flags, param: click_event(event, x, y, flags, param, board_corners, undistored))
+    #     cv2.imshow("Select Corners", temp)
+    #     cv2.setMouseCallback("Select Corners", lambda event, x, y, flags, param: click_event(event, x, y, flags, param, board_corners, undistored))
 
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('r'):   # reset
-            board_corners = []
-            print("Corners reset.")
-        elif key == ord('q'):  # quit
-            break
+    #     key = cv2.waitKey(1) & 0xFF
+    #     if key == ord('r'):   # reset
+    #         board_corners = []
+    #         print("Corners reset.")
+    #     elif key == ord('q'):  # quit
+    #         break
 
-    if len(board_corners) != 4:
-        print("Board corner selection was not completed. Exiting.")
-        return
+    # if len(board_corners) != 4:
+    #     print("Board corner selection was not completed. Exiting.")
+    #     return
 
     pygame.init()
     pygame.joystick.init()
-    try:
-        joystick = pygame.joystick.Joystick(0)
-        joystick.init()
-        print("Controller connected:", joystick.get_name())
-        jsc = JoystickController()
-    except pygame.error:
-        print("Joystick not found.")
-        jsc = None
+    joystick = pygame.joystick.Joystick(0)
+    joystick.init()
+    print("Controller connected:", joystick.get_name())
+    jsc = JoystickController()
 
     # This will contain the x, y, and z locations of the corners of the board using the get_current_point function
-    board_calibration_locations = []
+    board_calibration_locations = []#(-72.62823187586987, 253.28881823828934, -110.61636471632946), (49.7454279148611, 258.75756590200734, -110.61636471632946), (32.517505360317585, 57.76578590868315, -150.61636471632946), (-62.31749265736867, 70.54076640556205, -150.61636471632946)]
     
     while True:
       pygame.event.pump()
 
-      hor_servo, shoulder, elbow = jsc.update(get_inputs(joystick))
-      send_command(hor_servo, shoulder, elbow)
+      hor_servo, shoulder, elbow, wrist = jsc.update(get_inputs(joystick))
+      send_command(hor_servo, shoulder, elbow, wrist, magnet=0)
 
       ret, frame = cap.read()
       if not ret:
@@ -179,14 +175,21 @@ def main():
     # --- JOYSTICK SETUP ---
 
     # --- MAIN LOOP ---
+    # This will make the arm "draw" a straight line down the board
+    x_offset = 0
+    x_max = 200
+
     try:
         print("Press 'q' to quit")
         while True:
             pygame.event.pump()
 
-            if jsc:
-                # This is a4 (0, 4)
-                go_to_point(square_locations[0][4][0], square_locations[0][4][1], square_locations[0][4][2])
+            x_offset += 1
+            if x_offset > x_max:
+                x_offset = 0
+
+            #if jsc:
+                #go_to_point(square_locations[0][4][0], square_locations[0][4][1] - x_offset, square_locations[0][4][2] + x_offset)
 
             ret, frame = cap.read()
             if not ret:

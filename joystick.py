@@ -6,12 +6,14 @@ class JoystickInput:
     rt_raw = 0
     left_y = 0
     right_y = 0
+    d_pad_y = 0
 
 class JoystickController:
     def __init__(self):
         self.horServo = 0
         self.shoulder = 0
         self.elbow = 0
+        self.wrist = 0
 
     def update(self, jsi: JoystickInput):
         lt = trigger_value(jsi.lt_raw)
@@ -26,13 +28,18 @@ class JoystickController:
         if abs(jsi.right_y) < DEADZONE:
             jsi.right_y = 0
         self.elbow = jsi.right_y * MAX_SPEED
+
+        if abs(jsi.d_pad_y) < DEADZONE:
+            jsi.d_pad_y = 0
+        self.wrist = jsi.d_pad_y * MAX_SPEED
         
-        return self.horServo, self.shoulder, self.elbow
+        return self.horServo, self.shoulder, self.elbow, self.wrist
 
 LEFT_TRIGGER = 4
 RIGHT_TRIGGER = 5
 LEFT_Y = 1
 RIGHT_Y = 3
+DPAD_Y = 2
 # LEFT_TRIGGER = 3
 # RIGHT_TRIGGER = 2
 # LEFT_Y = 1
@@ -48,5 +55,6 @@ def get_inputs(joystick):
     jsi.rt_raw = joystick.get_axis(RIGHT_TRIGGER)
     jsi.left_y = joystick.get_axis(LEFT_Y)
     jsi.right_y = joystick.get_axis(RIGHT_Y)
+    jsi.d_pad_y = joystick.get_axis(DPAD_Y)
 
     return jsi
