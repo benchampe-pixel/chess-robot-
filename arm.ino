@@ -7,9 +7,9 @@ void setup() {
   Serial.begin(115200);
   horizontalServo.attach(13);   // change pins as needed
   shoulderServo.attach(14);
-  elbowServo.attach(15);
-  wristServo.attach(16);
-  magnetServo.attach(17);
+  elbowServo.attach(27);
+  wristServo.attach(12);
+  magnetServo.attach(26);
 }
 
 void loop() {
@@ -26,6 +26,9 @@ void loop() {
       wristValue = constrain(wristValue, 0, 180);
       magnetValue = constrain(magnetValue, 0, 180);
     }
+
+    //int pulse = map(wristValue, 0, 180, 1000, 2000);
+    //wristServo.writeMicroseconds(pulse);
 
     horizontalServo.write(horizontalValue);
     shoulderServo.write(shoulderValue);
